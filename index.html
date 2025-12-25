@@ -58,8 +58,6 @@
             overflow: hidden; 
             
             /* PREVENT CUT-OFF ON SHORT SCREENS */
-            /* If the screen is shorter than the grid (6 rows * 65px + gaps ≈ 460px), 
-               we allow the body to scroll or maintain size so it doesn't clip. */
             min-height: 500px;
         }
 
@@ -112,23 +110,6 @@
             line-height: 1;
         }
 
-        .layout-toggle-btn {
-            background: none;
-            border: 1px solid var(--text-color);
-            color: var(--text-color);
-            padding: 4px 10px;
-            font-family: inherit;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s, background 0.2s;
-        }
-        .layout-toggle-btn:hover {
-            opacity: 1;
-            background: rgba(128,128,128,0.2);
-        }
-
         /* --- 2. GRID SYSTEM (CSS GRID) --- */
         .tile-grid {
             display: grid;
@@ -176,23 +157,23 @@
         .bg-default { background-color: var(--tile-default); }
 
 
-        /* --- 3. RESPONSIVE / OVERRIDE LOGIC --- */
+        /* --- 3. RESPONSIVE LOGIC --- */
         
-        /* CASE 1: Automatic Vertical (Media Query) */
+        /* AUTOMATIC VERTICAL LAYOUT (Mobile / Portrait Tablet) */
         @media (orientation: portrait), (max-width: 800px) {
-            body:not(.force-horizontal) {
+            body {
                 overflow-y: auto; overflow-x: hidden;
                 min-height: unset; /* Remove min-height constraint for vertical scrolling */
             }
-            body:not(.force-horizontal) #start-screen {
+            #start-screen {
                 overflow-y: auto; overflow-x: hidden;
                 height: auto; min-height: 100vh;
                 padding: 40px 20px; display: block;
             }
-            body:not(.force-horizontal) .header-section {
+            .header-section {
                 margin-bottom: 30px;
             }
-            body:not(.force-horizontal) .tile-grid {
+            .tile-grid {
                 grid-template-rows: auto;
                 grid-template-columns: repeat(var(--grid-limit), var(--cell-size));
                 grid-auto-flow: row dense;
@@ -205,48 +186,19 @@
             }
         }
 
-        /* CASE 2: Forced Vertical (Class) */
-        body.force-vertical {
-            overflow-y: auto; overflow-x: hidden;
-            min-height: unset;
-        }
-        body.force-vertical #start-screen {
-            overflow-y: auto; overflow-x: hidden;
-            height: auto; min-height: 100vh;
-            padding: 40px 60px; 
-            display: block;
-        }
-        body.force-vertical .header-section {
-            margin-bottom: 30px;
-        }
-        body.force-vertical .tile-grid {
-            grid-template-rows: auto;
-            grid-template-columns: repeat(var(--grid-limit), var(--cell-size));
-            grid-auto-flow: row dense;
-            
-            justify-content: start; 
-            width: fit-content;
-            margin: 0; 
-            height: auto;
-            padding-right: 0;
-        }
-
-        /* --- FIX IS HERE --- */
-        /* Small Screen Adjustments (Shared) */
+        /* SMALL SCREEN ADJUSTMENTS */
         @media (max-width: 500px) { 
             :root { 
                 /* 1. Make cells flexible to fit screen width */
                 --cell-size: 1fr; 
                 
-                /* 2. REDUCE GRID LIMIT TO 4
+                /* 2. REDUCE GRID LIMIT TO 4 for small screens
                    6 columns is too crowded for mobile (<500px).
-                   4 columns is still EVEN, so 2x2 and 4x2 tiles fit perfectly 
-                   (2+2=4, 4=4) without the "dead space" glitch. */
+                   4 columns is still EVEN, so 2x2 and 4x2 tiles fit perfectly. */
                 --grid-limit: 4; 
             }
 
-            body:not(.force-horizontal) .tile-grid,
-            body.force-vertical .tile-grid { 
+            .tile-grid { 
                 width: 100%; 
                 grid-template-columns: repeat(var(--grid-limit), 1fr); 
             }
@@ -304,7 +256,7 @@
         
         <div class="header-section">
             <h1 class="page-title">myridiculouswebsite.pizza</h1>
-            <button id="layoutToggle" class="layout-toggle-btn" onclick="toggleLayout()">Switch Layout</button>
+            <!-- Button Removed -->
         </div>
 
         <div class="tile-grid">
@@ -446,25 +398,6 @@
     </div>
 
     <script>
-        // --- COOKIE HELPERS ---
-        function setCookie(cname, cvalue, exdays) {
-            const d = new Date();
-            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-            let expires = "expires="+d.toUTCString();
-            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-        }
-
-        function getCookie(cname) {
-            let name = cname + "=";
-            let ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') { c = c.substring(1); }
-                if (c.indexOf(name) == 0) { return c.substring(name.length, c.length); }
-            }
-            return "";
-        }
-
         // --- AUDIO ENGINE ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
@@ -486,50 +419,6 @@
         // --- UI LOGIC ---
         const startScreen = document.getElementById('start-screen');
         const apps = document.querySelectorAll('.app-container');
-        const layoutBtn = document.getElementById('layoutToggle');
-
-        // Layout Toggle Logic
-        function toggleLayout() {
-            // Determine current actual state (visual)
-            const isCurrentlyVertical = document.body.classList.contains('force-vertical') || 
-                                        (!document.body.classList.contains('force-horizontal') && 
-                                         window.matchMedia("(orientation: portrait), (max-width: 800px)").matches);
-            
-            if (isCurrentlyVertical) {
-                // Switch to Horizontal
-                document.body.classList.remove('force-vertical');
-                document.body.classList.add('force-horizontal');
-                layoutBtn.textContent = "Switch to Vertical";
-                setCookie("metro_layout_mode", "horizontal", 3);
-            } else {
-                // Switch to Vertical
-                document.body.classList.remove('force-horizontal');
-                document.body.classList.add('force-vertical');
-                layoutBtn.textContent = "Switch to Horizontal";
-                setCookie("metro_layout_mode", "vertical", 3);
-            }
-            playTone(600, 'sine', 0.1);
-        }
-
-        // Initialize Layout from Cookie
-        function initLayout() {
-            const savedMode = getCookie("metro_layout_mode");
-            if (savedMode === "vertical") {
-                document.body.classList.add('force-vertical');
-                layoutBtn.textContent = "Switch to Horizontal";
-            } else if (savedMode === "horizontal") {
-                document.body.classList.add('force-horizontal');
-                layoutBtn.textContent = "Switch to Vertical";
-            } else {
-                // No cookie, Auto mode. Set button text based on default appearance
-                if (window.matchMedia("(orientation: portrait), (max-width: 800px)").matches) {
-                    layoutBtn.textContent = "Switch to Horizontal";
-                } else {
-                    layoutBtn.textContent = "Switch to Vertical";
-                }
-            }
-        }
-        initLayout();
 
         // Tiles
         document.querySelectorAll('.tile').forEach(tile => {

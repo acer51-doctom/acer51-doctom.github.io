@@ -3,23 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>idkwhereisthis.name</title>
+    <title>myridiculouswebsite.pizza</title>
     <style>
         /* --- CORE CONFIGURATION --- */
         :root {
             --bg-color: #e5e5e5;
             --text-color: #000000;
             
-            /* Metro Colors from the provided snippet */
+            /* Metro Colors */
             --tile-red: #d24726;
             --tile-blue: #00AEEF;
             --tile-crimson: #b01c3c;
             --tile-darkblue: #173a73;
             --tile-grey: #404040;
             --tile-green: #107c10;
-            --tile-default: #2b2b2b; /* Fallback dark */
+            --tile-default: #2b2b2b;
             
-            /* Animation Easing - "Fast in, Slow out" */
+            /* Grid Math */
+            --cell-size: 65px;
+            --gap-size: 10px;
+            
+            /* DEFAULT GRID LIMIT: 6 
+               Great for Desktop/Tablet. 2+2+2=6 or 4+2=6.
+            */
+            --grid-limit: 6; 
+
+            /* Animation */
             --ease-metro: cubic-bezier(0.1, 0.9, 0.2, 1);
         }
 
@@ -43,8 +52,15 @@
             margin: 0;
             padding: 0;
             width: 100vw;
+            /* Use dvh to handle mobile address bars better */
             height: 100vh;
-            overflow: hidden;
+            height: 100dvh; 
+            overflow: hidden; 
+            
+            /* PREVENT CUT-OFF ON SHORT SCREENS */
+            /* If the screen is shorter than the grid (6 rows * 65px + gaps ≈ 460px), 
+               we allow the body to scroll or maintain size so it doesn't clip. */
+            min-height: 500px;
         }
 
         a { text-decoration: none; color: inherit; }
@@ -55,16 +71,21 @@
             width: 100%;
             height: 100%;
             padding: 40px 60px;
-            overflow-x: auto; 
-            overflow-y: hidden;
-            white-space: nowrap; 
+            display: flex;
+            flex-direction: column;
+            
+            /* Default: Horizontal Scroll Handling */
+            overflow-x: auto;
+            overflow-y: hidden; /* Only hide Y if we are sure it fits, handled by min-height on body */
+            
             transition: transform 0.5s var(--ease-metro), opacity 0.4s ease;
             transform-origin: 20% 50%;
+            will-change: transform, opacity;
         }
 
-        /* Custom Scrollbar */
-        #start-screen::-webkit-scrollbar { height: 12px; }
-        #start-screen::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.5); }
+        /* Custom Scrollbar for horizontal mode */
+        #start-screen::-webkit-scrollbar { height: 12px; width: 12px; }
+        #start-screen::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.5); border-radius: 6px; }
         #start-screen::-webkit-scrollbar-track { background: transparent; }
 
         #start-screen.zoom-out {
@@ -74,63 +95,78 @@
         }
 
         .header-section {
+            height: auto; 
             margin-bottom: 20px;
-            margin-left: 5px;
             animation: fade-in-left 0.6s var(--ease-metro);
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column; 
+            align-items: flex-start;
+            gap: 5px;
+            flex-shrink: 0; 
         }
 
         .page-title { 
             font-size: 3rem; 
             font-weight: 300; 
             color: var(--text-color);
-        }
-        
-        .header-avatar {
-            width: 50px; 
-            height: 50px; 
-            border-radius: 50%; 
-            background: #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            line-height: 1;
         }
 
-        /* --- 2. TILE GRID SYSTEM --- */
+        .layout-toggle-btn {
+            background: none;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 4px 10px;
+            font-family: inherit;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .layout-toggle-btn:hover {
+            opacity: 1;
+            background: rgba(128,128,128,0.2);
+        }
+
+        /* --- 2. GRID SYSTEM (CSS GRID) --- */
         .tile-grid {
-            display: flex;
-            flex-direction: column;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            height: calc(100% - 100px); /* Fill remaining height */
-            gap: 10px;
-            animation: fade-in-up 0.8s var(--ease-metro);
+            display: grid;
+            gap: var(--gap-size);
+            
+            /* --- HORIZONTAL MODE (DEFAULT) --- */
+            /* Uses the variable for rows */
+            grid-template-rows: repeat(var(--grid-limit), var(--cell-size));
+            grid-auto-flow: column dense;
+            grid-auto-columns: var(--cell-size);
+            
+            align-content: center;
+            height: 100%;
             padding-bottom: 20px;
+            padding-right: 60px;
+            
+            animation: fade-in-up 0.8s var(--ease-metro);
         }
 
-        /* TILE BOUNDARIES */
+        /* TILE BASICS */
         .tile {
             position: relative;
             cursor: pointer;
             overflow: hidden; 
             transition: transform 0.1s linear, outline 0.1s;
-            color: white; /* Tiles always white text */
-            flex-shrink: 0;
+            color: white; 
+            z-index: 1;
         }
-
         .tile:hover { outline: 3px solid rgba(128,128,128,0.4); z-index: 10; }
         .tile:active { transform: scale(0.97); }
 
-        /* Sizing - Based on 140px unit */
-        .small  { width: 65px; height: 65px; margin-right: 5px; }
-        .medium { width: 140px; height: 140px; }
-        .wide   { width: 290px; height: 140px; }
-        .large  { width: 290px; height: 290px; }
+        /* TILE SIZES */
+        .small  { grid-column: span 1; grid-row: span 1; }
+        .medium { grid-column: span 2; grid-row: span 2; }
+        .wide   { grid-column: span 4; grid-row: span 2; }
+        .large  { grid-column: span 4; grid-row: span 4; }
 
-        /* Colors */
+        /* COLORS */
         .bg-red { background-color: var(--tile-red); }
         .bg-blue { background-color: var(--tile-blue); }
         .bg-crimson { background-color: var(--tile-crimson); }
@@ -139,175 +175,126 @@
         .bg-green { background-color: var(--tile-green); }
         .bg-default { background-color: var(--tile-default); }
 
-        /* --- 3. LIVE TILE ANIMATION --- */
-        .tile-slider {
-            width: 100%;
-            height: 100%;
-            position: relative;
+
+        /* --- 3. RESPONSIVE / OVERRIDE LOGIC --- */
+        
+        /* CASE 1: Automatic Vertical (Media Query) */
+        @media (orientation: portrait), (max-width: 800px) {
+            body:not(.force-horizontal) {
+                overflow-y: auto; overflow-x: hidden;
+                min-height: unset; /* Remove min-height constraint for vertical scrolling */
+            }
+            body:not(.force-horizontal) #start-screen {
+                overflow-y: auto; overflow-x: hidden;
+                height: auto; min-height: 100vh;
+                padding: 40px 20px; display: block;
+            }
+            body:not(.force-horizontal) .header-section {
+                margin-bottom: 30px;
+            }
+            body:not(.force-horizontal) .tile-grid {
+                grid-template-rows: auto;
+                grid-template-columns: repeat(var(--grid-limit), var(--cell-size));
+                grid-auto-flow: row dense;
+                
+                justify-content: center; 
+                width: fit-content;
+                margin: 0 auto;
+                height: auto;
+                padding-right: 0;
+            }
         }
 
-        /* Aggressive "Metro" Ease: Fast start, slow end */
-        .live .tile-slider { 
-            animation: tile-slide 10s infinite cubic-bezier(0.05, 0.9, 0.1, 1); 
+        /* CASE 2: Forced Vertical (Class) */
+        body.force-vertical {
+            overflow-y: auto; overflow-x: hidden;
+            min-height: unset;
         }
-        
-        /* Stagger animations */
+        body.force-vertical #start-screen {
+            overflow-y: auto; overflow-x: hidden;
+            height: auto; min-height: 100vh;
+            padding: 40px 60px; 
+            display: block;
+        }
+        body.force-vertical .header-section {
+            margin-bottom: 30px;
+        }
+        body.force-vertical .tile-grid {
+            grid-template-rows: auto;
+            grid-template-columns: repeat(var(--grid-limit), var(--cell-size));
+            grid-auto-flow: row dense;
+            
+            justify-content: start; 
+            width: fit-content;
+            margin: 0; 
+            height: auto;
+            padding-right: 0;
+        }
+
+        /* --- FIX IS HERE --- */
+        /* Small Screen Adjustments (Shared) */
+        @media (max-width: 500px) { 
+            :root { 
+                /* 1. Make cells flexible to fit screen width */
+                --cell-size: 1fr; 
+                
+                /* 2. REDUCE GRID LIMIT TO 4
+                   6 columns is too crowded for mobile (<500px).
+                   4 columns is still EVEN, so 2x2 and 4x2 tiles fit perfectly 
+                   (2+2=4, 4=4) without the "dead space" glitch. */
+                --grid-limit: 4; 
+            }
+
+            body:not(.force-horizontal) .tile-grid,
+            body.force-vertical .tile-grid { 
+                width: 100%; 
+                grid-template-columns: repeat(var(--grid-limit), 1fr); 
+            }
+            
+            /* Make text slightly smaller/responsive if needed */
+            .page-title { font-size: 2.5rem; }
+            #start-screen { padding: 30px 20px; }
+        }
+
+
+        /* --- 4. ANIMATION & APPS --- */
+        .tile-slider { width: 100%; height: 100%; position: relative; will-change: transform; transform: translate3d(0,0,0); }
+        .live .tile-slider { animation: tile-slide 10s infinite cubic-bezier(0.05, 0.9, 0.1, 1); }
         .delay-1 .tile-slider { animation-delay: 0.5s; }
         .delay-2 .tile-slider { animation-delay: 2.5s; }
         .delay-3 .tile-slider { animation-delay: 5s; }
         .delay-4 .tile-slider { animation-delay: 7.5s; }
 
         @keyframes tile-slide {
-            /* 0-45%: Show Front
-               52-93%: Show Back (Slide Up)
-               100%: Show Front (Slide Down)
-            */
-            0%, 45% { transform: translateY(0); }
-            52%, 93% { transform: translateY(-100%); }
-            100% { transform: translateY(0); }
+            0%, 45% { transform: translate3d(0, 0, 0); }
+            52%, 93% { transform: translate3d(0, -100%, 0); }
+            100% { transform: translate3d(0, 0, 0); }
         }
 
-        .tile-face {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
+        .tile-face { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; backface-visibility: hidden; }
         .face-front { top: 0; background: inherit; z-index: 2; }
         .face-back  { top: 100%; background: inherit; z-index: 1; }
 
-        /* Text Styling inside Tiles */
-        .tile-center-icon {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-        }
-        
-        .tile-text-main {
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.2;
-        }
+        .tile-center-icon { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .tile-text-main { font-size: 14px; font-weight: 500; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word; }
+        .tile-label { font-size: 12px; font-weight: 600; opacity: 0.9; }
 
-        .tile-label {
-            font-size: 12px;
-            font-weight: 600;
-            opacity: 0.9;
-        }
-
-        /* --- 4. APP CONTAINER (The "Windows") --- */
-        .app-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: var(--bg-color);
-            color: var(--text-color);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.5s var(--ease-metro);
-            box-shadow: -20px 0 50px rgba(0,0,0,0.5);
-        }
-
-        .app-container.active { transform: translateX(0%); }
-
-        .app-header {
-            flex-shrink: 0; 
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        /* Header Title inside Apps */
-        .app-header h2 {
-            font-weight: 300;
-            font-size: 2.5rem;
-        }
-
-        .back-button {
-            width: 48px; height: 48px;
-            border: 2px solid currentColor;
-            border-radius: 50%;
-            background: transparent;
-            color: inherit;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            padding-bottom: 4px; /* Visual alignment for arrow */
-        }
+        .app-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); color: var(--text-color); z-index: 100; display: flex; flex-direction: column; transform: translate3d(100%, 0, 0); transition: transform 0.5s var(--ease-metro); box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+        .app-container.active { transform: translate3d(0, 0, 0); }
+        .app-header { flex-shrink: 0; padding: 20px 40px; display: flex; align-items: center; gap: 20px; }
+        .app-header h2 { font-weight: 300; font-size: 2.5rem; }
+        .back-button { width: 48px; height: 48px; border: 2px solid currentColor; border-radius: 50%; background: transparent; color: inherit; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding-bottom: 4px; }
         .back-button:hover { background: rgba(128,128,128,0.2); }
+        .app-content { flex-grow: 1; overflow-y: auto; padding: 20px 40px 80px 40px; max-width: 1200px; width: 100%; margin: 0 auto; }
 
-        .app-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px 40px 80px 40px;
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        /* --- CONTENT STYLES --- */
         .highlight-green { color: green; font-weight: bold; }
         .highlight-red { color: red; font-weight: bold; }
-        
-        /* 88x31 Button Grid */
-        .button-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .button-88x31 {
-            width: 88px; height: 31px;
-            background: #ccc;
-            image-rendering: pixelated;
-            border: 1px solid #999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #333;
-            text-align: center;
-            cursor: pointer;
-        }
-        .button-88x31:hover { opacity: 0.8; }
-
-        /* Q&A Style */
         .qa-block { margin-bottom: 20px; }
         .qa-q { color: red; font-weight: bold; }
         .qa-a { color: green; font-weight: bold; }
 
-        /* Animations */
-        @keyframes fade-in-left { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fade-in-up { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Mobile Layout */
-        @media (max-width: 600px) {
-            #start-screen { padding: 20px; }
-            .tile-grid { 
-                flex-direction: row; 
-                height: auto;
-                justify-content: center;
-            }
-            .header-section { margin-left: 20px; }
-            .tile { margin-bottom: 5px; }
-            .wide, .medium { width: calc(50vw - 25px); height: calc(50vw - 25px); }
-            .wide { width: calc(100vw - 40px); height: 150px; }
-            
-            .app-header { padding: 15px 20px; }
-            .app-content { padding: 20px; }
-            .app-header h2 { font-size: 1.8rem; }
-        }
+        @keyframes fade-in-left { from { opacity: 0; transform: translate3d(50px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes fade-in-up { from { opacity: 0; transform: translate3d(0, 50px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
     </style>
 </head>
 <body>
@@ -316,339 +303,169 @@
     <div id="start-screen">
         
         <div class="header-section">
-            <h1 class="page-title">idkwhereisthis.name</h1>
-            <div class="header-avatar">🐱</div>
+            <h1 class="page-title">myridiculouswebsite.pizza</h1>
+            <button id="layoutToggle" class="layout-toggle-btn" onclick="toggleLayout()">Switch Layout</button>
         </div>
 
         <div class="tile-grid">
 
-            <!-- 1. ABOUT (Red, Medium) -->
+            <!-- 1. ABOUT (Medium: 2x2) -->
             <div class="tile medium bg-red live delay-1" onclick="openApp('app-about')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">👤</div>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">👤</div></div>
                     <div class="tile-face face-back">
                         <div class="tile-center-icon">📄</div>
-                        <span class="tile-text-main">about me, my interests, and more :3</span>
+                        <span class="tile-text-main">about me, my interests, and more!</span>
                     </div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">about</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">about</span></div>
             </div>
 
-            <!-- 2. PROJECTS (Blue, Wide) -->
+            <!-- 2. PROJECTS (Wide: 4x2) -->
             <div class="tile wide bg-blue live delay-2" onclick="openApp('app-projects')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon" style="font-size: 60px;">💻</div>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon" style="font-size: 60px;">💻</div></div>
                     <div class="tile-face face-back">
                         <div class="tile-center-icon">🚀</div>
                         <span class="tile-text-main">projects I was involved in</span>
                     </div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">projects</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">projects</span></div>
             </div>
 
-            <!-- 3. LINKS (Crimson, Medium) -->
+            <!-- 3. LINKS (Medium: 2x2) -->
             <div class="tile medium bg-crimson live delay-3" onclick="openApp('app-links')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">🔗</div>
-                    </div>
-                    <div class="tile-face face-back">
-                        <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">links to some of my socials</span>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">🔗</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">links to some of my socials</span></div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">links</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">links</span></div>
             </div>
 
-            <!-- 4. FRIEND CODES (Default, Medium) -->
-            <div class="tile medium bg-default live delay-1" onclick="openApp('app-codes')">
-                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">🎮</div>
-                    </div>
-                    <div class="tile-face face-back">
-                        <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">friend codes of some of my consoles</span>
-                    </div>
-                </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">friend codes</span>
-                </div>
-            </div>
-
-            <!-- 5. FAQ (Dark Blue, Medium) -->
+            <!-- 4. FAQ (Medium: 2x2) -->
             <div class="tile medium bg-darkblue live delay-4" onclick="openApp('app-faq')">
                  <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">❓</div>
-                    </div>
-                    <div class="tile-face face-back">
-                        <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">frequently asked questions</span>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">❓</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">frequently asked questions</span></div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">FAQ</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">FAQ</span></div>
             </div>
 
-            <!-- 6. CONTACT (Default, Medium) -->
+            <!-- 5. CONTACT (Medium: 2x2) -->
             <div class="tile medium bg-default live delay-2" onclick="openApp('app-contact')">
                  <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">📞</div>
-                    </div>
-                    <div class="tile-face face-back">
-                        <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">how to contact (phone number NOT included)</span>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">📞</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">how to contact</span></div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">contact</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">contact</span></div>
             </div>
 
-            <!-- 7. CREDITS (Grey, Medium) -->
+            <!-- 6. CREDITS (Medium: 2x2) -->
             <div class="tile medium bg-grey live delay-3" onclick="openApp('app-credits')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">📝</div>
-                    </div>
-                    <div class="tile-face face-back">
-                        <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">credits for parts of this site</span>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">📝</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">credits for parts of this site</span></div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">credits</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">credits</span></div>
             </div>
 
-            <!-- 8. OTHERS (Default, Medium) -->
+            <!-- 7. OTHERS (Medium: 2x2) -->
             <div class="tile medium bg-default live delay-1" onclick="openApp('app-others')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">💡</div>
-                    </div>
-                    <div class="tile-face face-back">
-                         <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">miscellaneous stuff</span>
-                    </div>
+                    <div class="tile-face face-front"><div class="tile-center-icon">💡</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">miscellaneous stuff</span></div>
                 </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">others</span>
-                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px;"><span class="tile-label">others</span></div>
             </div>
-
-             <!-- 9. BUTTONS (Green, Wide) -->
-             <div class="tile wide bg-green live delay-2" onclick="openApp('app-buttons')">
-                <div class="tile-slider">
-                    <div class="tile-face face-front">
-                        <div class="tile-center-icon">🎞️</div>
-                    </div>
-                    <div class="tile-face face-back">
-                         <span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">88x31 buttons I've collected from the internet</span>
-                    </div>
-                </div>
-                <div style="position: absolute; bottom: 10px; left: 10px;">
-                    <span class="tile-label">88x31 buttons</span>
-                </div>
-            </div>
-
-            <!-- Small Links (Static) -->
-            <div class="tile small bg-default" style="display: flex; align-items: center; justify-content: center; background: #34beed;">
-                <span style="font-size: 24px;">🐦</span>
-            </div>
-             <div class="tile small bg-default" style="display: flex; align-items: center; justify-content: center; background: white; color: black;">
-                <span style="font-size: 24px;">🌐</span>
-            </div>
-
-        </div>
+            
+        </div> <!-- End Tile Grid -->
     </div>
 
-    <!-- === APPS === -->
-
-    <!-- About App -->
+    <!-- === APPS (Content remains same) === -->
     <div id="app-about" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>about</h2>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>about</h2></div>
         <div class="app-content">
-            <p style="font-size: 1.2rem;">hi!! i'm idkwhereisthisname (idkwh for short), i like old tech and programming.</p>
-            <br>
-            <p>i mainly develop in Java, though i'm still learning. I also write in HTML and CSS.</p>
-            <br><br>
-            <p><span class="highlight-green">loves: Wii (U), Old PCs</span></p>
-            <p><span class="highlight-red">hates: self</span></p>
-            <br><br>
-            <p>i own a Wii, Wii U, Switch, PS4, DSi (xl), old 3DS and an old 2DS!!</p>
-            <br>
+            <p style="font-size: 1.2rem;">hello! my name is Acer_51 (you can call me Acer), i like old things, programming and gaming</p><br>
+            <p>i develop in Kotlin, Java, HTML/CSS/JS but I'm also learning C/++ and I'm planning to learn GO</p><br><br>
+            <p><span class="highlight-green">i love reviving old tech, consoles and tinkering with stuff</span></p>
+            <p><span class="highlight-red">hates: self</span></p><br><br>
+            <p>i own a Wii, Wii U, Switch, New 3DS XL, New 2DS XL, Switch OLED and an old 3DS XL.</p><br>
             <p>📅 it is currently <span id="clock" class="highlight-green"></span> for me.</p>
         </div>
     </div>
 
-    <!-- Projects App -->
     <div id="app-projects" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>projects</h2>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>projects</h2></div>
         <div class="app-content">
-            <h1 style="margin-bottom: 5px;">🟩 WiiMart</h1>
-            <p style="color: #666; margin-bottom: 30px;">WiiMart is an active Wii Shop revival.</p>
-
-            <h1 style="margin-bottom: 5px;">🟥 YaWSC</h1>
-            <p style="color: #666;">My attempt at reviving the Wii Shop (not failed because of drama)</p>
+            <h1 style="margin-bottom: 5px;">🟩 Breach In The Containment</h1>
+            <p style="color: #666; margin-bottom: 30px;">A Minecraft Server mixing FNaF and SCP.</p>
+            <h1 style="margin-bottom: 5px;">🟥 LegacyPreferences</h1>
+            <p style="color: #666;">My attempt at reviving the old System Preferences from macOS Monterey and prior.</p>
         </div>
     </div>
 
-    <!-- Links App -->
     <div id="app-links" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>links</h2>
-        </div>
-        <div class="app-content">
-            <h3 style="margin-bottom: 20px;">you can find me on:</h3>
-            <ul style="list-style: none; padding: 0; font-size: 1.2rem; line-height: 2;">
-                <li><a href="#" style="color: var(--tile-blue)">youtube</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">github</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">gbatemp</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">pronouns.page</a></li>
-            </ul>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>links</h2></div>
+        <div class="app-content"><h3 style="margin-bottom: 20px;">all my links are on <a href="https://guns.lol/acer51">this!</a></h3></div>
     </div>
 
-    <!-- Codes App -->
-    <div id="app-codes" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>friend codes</h2>
-        </div>
-        <div class="app-content">
-            <p style="margin-bottom: 20px;">be sure to contact me if you add any of these codes!!</p>
-            <div style="background: #eee; padding: 20px; border-left: 4px solid var(--tile-green); color: black;">
-                <p>Wii Friend Code: <b>2603-3630-6608-9393</b></p>
-                <p style="margin-top: 10px;">Wii U PNID: <b>idkwhereisthisna</b></p>
-                <p style="margin-top: 10px;">3DS Friend Code: <b>1732-9327-3692</b></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- FAQ App -->
     <div id="app-faq" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>faq</h2>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>faq</h2></div>
         <div class="app-content">
             <h3 style="margin-bottom: 30px;">asked questions frequently</h3>
-            
-            <div class="qa-block">
-                <span class="qa-q">Q: </span>where do you live?
-                <br>
-                <span class="qa-a">A: </span>in my house
-            </div>
-
-            <div class="qa-block">
-                <span class="qa-q">Q: </span>what is your real name?
-                <br>
-                <span class="qa-a">A: </span>idk
-            </div>
-
-            <div class="qa-block">
-                <span class="qa-q">Q: </span>with what program did you write this website?
-                <br>
-                <span class="qa-a">A: </span>still visual studio code!!
-            </div>
+            <div class="qa-block"><span class="qa-q">Q: </span>where do you live?<br><span class="qa-a">A: </span>in my house</div>
+            <div class="qa-block"><span class="qa-q">Q: </span>what is your real name?<br><span class="qa-a">A: </span> "<insert a name>"</div>
+            <div class="qa-block"><span class="qa-q">Q: </span>with what program did you write this website?<br><span class="qa-a">A: </span>VS Code</div>
         </div>
     </div>
 
-    <!-- Contact App -->
     <div id="app-contact" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>contact</h2>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>contact</h2></div>
         <div class="app-content">
             <h3>you can contact me via:</h3>
             <ul style="list-style: none; padding: 0; font-size: 1.2rem; line-height: 2; margin-top: 20px;">
-                <li><a href="#" style="color: var(--tile-blue)">mail</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">discord</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">gbatemp</a></li>
+                <li><a href="mailto:&#x61;&#x63;&#x65;&#x72;&#x35;&#x31;&#x2E;&#x64;&#x65;&#x70;&#x6C;&#x6F;&#x70;&#x70;&#x65;&#x72;&#x40;&#x67;&#x6D;&#x61;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;" style="color: var(--tile-blue)">mail</a></li>
+                <li><a href="https://guns.lol/acer51" style="color: var(--tile-blue)">my links</a></li>
             </ul>
         </div>
     </div>
 
-    <!-- Credits App -->
     <div id="app-credits" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>credits</h2>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>credits</h2></div>
         <div class="app-content" style="text-align: center;">
             <div style="border: 1px dotted var(--tile-blue); padding: 40px; display: inline-block;">
-                <h3>You</h3>
-                <p>for visiting this website :3</p>
-                <br><br>
-                <h3>TheWiiArchivist</h3>
-                <p>for some css</p>
+                <h3>You</h3><p>for visiting this website :3</p><br><br>
+                <h3>idkwhereisthisname</h3><p>for the whole website concept (don't sue me :[)</p>
             </div>
         </div>
     </div>
 
-    <!-- Others App -->
     <div id="app-others" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>miscellaneous</h2>
-        </div>
-        <div class="app-content">
-            <ul style="list-style: none; padding: 0; font-size: 1.2rem; line-height: 2;">
-                <li><a href="#" style="color: var(--tile-blue)">setting.txt reader</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">stuff i got online</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">vWii Menu Manual</a></li>
-                <li><a href="#" style="color: var(--tile-blue)">Wii Mini Menu Manual</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Buttons App -->
-    <div id="app-buttons" class="app-container">
-        <div class="app-header">
-            <button class="back-button" onclick="goHome()">⬅</button>
-            <h2>buttons</h2>
-        </div>
-        <div class="app-content">
-            <p style="margin-bottom: 20px;">A collection of 88x31 buttons.</p>
-            <div class="button-grid">
-                <!-- Simulating buttons with CSS placeholders since we don't have the GIFs -->
-                <div class="button-88x31">IE Explorer</div>
-                <div class="button-88x31">Firefox</div>
-                <div class="button-88x31">Netscape</div>
-                <div class="button-88x31">Notepad++</div>
-                <div class="button-88x31">Wii Shop</div>
-                <div class="button-88x31">HTML 5</div>
-                <div class="button-88x31">CSS 3</div>
-                <div class="button-88x31">Windows XP</div>
-                <div class="button-88x31">No War</div>
-                <div class="button-88x31">VS Code</div>
-                <div class="button-88x31">Java</div>
-                <div class="button-88x31">GitHub</div>
-                <div class="button-88x31">Any Browser</div>
-                <div class="button-88x31">Copy Now</div>
-                <div class="button-88x31">Download</div>
-            </div>
-        </div>
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>others</h2></div>
+        <div class="app-content"><p>Miscellaneous content goes here!</p></div>
     </div>
 
     <script>
-        // --- AUDIO ENGINE (Optional - Kept for "better" feel) ---
+        // --- COOKIE HELPERS ---
+        function setCookie(cname, cvalue, exdays) {
+            const d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            let expires = "expires="+d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+
+        function getCookie(cname) {
+            let name = cname + "=";
+            let ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') { c = c.substring(1); }
+                if (c.indexOf(name) == 0) { return c.substring(name.length, c.length); }
+            }
+            return "";
+        }
+
+        // --- AUDIO ENGINE ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
 
@@ -669,6 +486,50 @@
         // --- UI LOGIC ---
         const startScreen = document.getElementById('start-screen');
         const apps = document.querySelectorAll('.app-container');
+        const layoutBtn = document.getElementById('layoutToggle');
+
+        // Layout Toggle Logic
+        function toggleLayout() {
+            // Determine current actual state (visual)
+            const isCurrentlyVertical = document.body.classList.contains('force-vertical') || 
+                                        (!document.body.classList.contains('force-horizontal') && 
+                                         window.matchMedia("(orientation: portrait), (max-width: 800px)").matches);
+            
+            if (isCurrentlyVertical) {
+                // Switch to Horizontal
+                document.body.classList.remove('force-vertical');
+                document.body.classList.add('force-horizontal');
+                layoutBtn.textContent = "Switch to Vertical";
+                setCookie("metro_layout_mode", "horizontal", 3);
+            } else {
+                // Switch to Vertical
+                document.body.classList.remove('force-horizontal');
+                document.body.classList.add('force-vertical');
+                layoutBtn.textContent = "Switch to Horizontal";
+                setCookie("metro_layout_mode", "vertical", 3);
+            }
+            playTone(600, 'sine', 0.1);
+        }
+
+        // Initialize Layout from Cookie
+        function initLayout() {
+            const savedMode = getCookie("metro_layout_mode");
+            if (savedMode === "vertical") {
+                document.body.classList.add('force-vertical');
+                layoutBtn.textContent = "Switch to Horizontal";
+            } else if (savedMode === "horizontal") {
+                document.body.classList.add('force-horizontal');
+                layoutBtn.textContent = "Switch to Vertical";
+            } else {
+                // No cookie, Auto mode. Set button text based on default appearance
+                if (window.matchMedia("(orientation: portrait), (max-width: 800px)").matches) {
+                    layoutBtn.textContent = "Switch to Horizontal";
+                } else {
+                    layoutBtn.textContent = "Switch to Vertical";
+                }
+            }
+        }
+        initLayout();
 
         // Tiles
         document.querySelectorAll('.tile').forEach(tile => {
@@ -694,7 +555,8 @@
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('clock').textContent = timeString;
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.textContent = timeString;
         }
         setInterval(updateClock, 1000);
         updateClock();

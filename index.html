@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>myridiculouswebsite.pizza</title>
     <style>
-        /* --- CORE CONFIGURATION --- */
+        /* --- CORE CONFIGURATION (ENFORCED DARK MODE) --- */
         :root {
-            --bg-color: #e5e5e5;
-            --text-color: #000000;
+            /* Set to Dark Mode colors by default */
+            --bg-color: #1d1d1d;
+            --text-color: #ffffff;
             
+            /* Metro Colors */
             --tile-red: #d24726;
             --tile-blue: #00AEEF;
             --tile-crimson: #b01c3c;
@@ -18,22 +20,25 @@
             --tile-green: #107c10;
             --tile-default: #2b2b2b;
             
-            /* Fixed sizes to prevent squishing */
-            --cell-size: 80px; 
+            /* Grid Math */
+            --cell-size: 65px;
             --gap-size: 10px;
+            
+            /* DEFAULT GRID LIMIT: 6 
+               Great for Desktop/Tablet. 2+2+2=6 or 4+2=6.
+            */
             --grid-limit: 6; 
 
+            /* Animation */
             --ease-metro: cubic-bezier(0.1, 0.9, 0.2, 1);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #1d1d1d;
-                --text-color: #ffffff;
-            }
-        }
+        /* Removed prefers-color-scheme light logic to keep it Dark Only */
 
-        * { box-sizing: border-box; user-select: none; }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
 
         body {
             background-color: var(--bg-color);
@@ -42,50 +47,98 @@
             margin: 0;
             padding: 0;
             width: 100vw;
+            height: 100vh;
             height: 100dvh; 
-            overflow-x: hidden;
+            overflow: hidden; 
+            min-height: 500px;
         }
 
+        a { text-decoration: none; color: inherit; }
+        h1, h2, h3, p { margin: 0; }
+
+        /* --- 1. START SCREEN CONTAINER --- */
         #start-screen {
             width: 100%;
             height: 100%;
             padding: 40px 60px;
             display: flex;
             flex-direction: column;
+            
+            /* Default: Horizontal Scroll */
             overflow-x: auto;
+            overflow-y: hidden; 
+            
             transition: transform 0.5s var(--ease-metro), opacity 0.4s ease;
+            transform-origin: 20% 50%;
+            will-change: transform, opacity;
         }
 
-        .header-section { margin-bottom: 20px; flex-shrink: 0; }
-        .page-title { font-size: 3rem; font-weight: 300; }
+        #start-screen::-webkit-scrollbar { height: 12px; width: 12px; }
+        #start-screen::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.5); border-radius: 6px; }
+        #start-screen::-webkit-scrollbar-track { background: transparent; }
 
-        /* --- GRID SYSTEM --- */
+        #start-screen.zoom-out {
+            transform: scale(0.85);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .header-section {
+            height: auto; 
+            margin-bottom: 20px;
+            animation: fade-in-left 0.6s var(--ease-metro);
+            display: flex;
+            flex-direction: column; 
+            align-items: flex-start;
+            gap: 5px;
+            flex-shrink: 0; 
+        }
+
+        .page-title { 
+            font-size: 3rem; 
+            font-weight: 300; 
+            color: var(--text-color);
+            line-height: 1;
+        }
+
+        /* --- 2. GRID SYSTEM (CSS GRID) --- */
         .tile-grid {
             display: grid;
             gap: var(--gap-size);
-            /* Fixed rows on desktop to prevent vertical squishing */
+            
+            /* --- HORIZONTAL MODE (DEFAULT) --- */
             grid-template-rows: repeat(var(--grid-limit), var(--cell-size));
-            grid-auto-flow: column;
+            grid-auto-flow: column dense;
             grid-auto-columns: var(--cell-size);
-            height: fit-content;
-            padding-bottom: 50px;
+            
+            align-content: center;
+            height: 100%;
+            padding-bottom: 20px;
+            padding-right: 60px;
+            
+            animation: fade-in-up 0.8s var(--ease-metro);
         }
 
-        /* TILE SIZES - Using grid-area for cleaner management */
-        .small  { grid-column: span 1; grid-row: span 1; }
-        .medium { grid-column: span 2; grid-row: span 2; }
-        .wide   { grid-column: span 4; grid-row: span 2; }
-        .large  { grid-column: span 4; grid-row: span 4; }
-
+        /* TILE BASICS */
         .tile {
             position: relative;
             cursor: pointer;
             overflow: hidden; 
-            color: white;
-            background-color: var(--tile-default);
-            transition: transform 0.1s;
+            transition: transform 0.1s linear, outline 0.1s;
+            color: white; 
+            z-index: 1;
+            /* Prevent tiles from collapsing/squishing */
+            min-width: var(--cell-size);
+            min-height: var(--cell-size);
         }
-        .tile:active { transform: scale(0.98); }
+        .tile:hover { outline: 3px solid rgba(128,128,128,0.4); z-index: 10; }
+        .tile:active { transform: scale(0.97); }
+
+        /* TILE SIZES */
+        .small  { grid-column: span 1; grid-row: span 1; }
+        .medium { grid-column: span 2; grid-row: span 2; }
+        .wide   { grid-column: span 4; grid-row: span 2; }
+        .large  { grid-column: span 4; grid-row: span 4; }
 
         /* COLORS */
         .bg-red { background-color: var(--tile-red); }
@@ -94,145 +147,311 @@
         .bg-darkblue { background-color: var(--tile-darkblue); }
         .bg-grey { background-color: var(--tile-grey); }
         .bg-green { background-color: var(--tile-green); }
+        .bg-default { background-color: var(--tile-default); }
 
-        /* --- MOBILE/VERTICAL OVERRIDE --- */
-        @media (max-width: 800px) {
-            #start-screen {
-                padding: 20px;
-                overflow-y: auto;
+
+        /* --- 3. RESPONSIVE LOGIC (VERTICAL ADAPTATION) --- */
+        
+        /* Apply vertical behavior for narrow windows OR portrait screens */
+        @media (orientation: portrait), (max-width: 800px) {
+            body {
+                overflow-y: auto; 
                 overflow-x: hidden;
+                min-height: unset; 
+            }
+            #start-screen {
+                overflow-y: auto; 
+                overflow-x: hidden;
+                height: auto; 
+                min-height: 100vh;
+                padding: 40px 20px; 
+                display: block;
+            }
+            .header-section {
+                margin-bottom: 30px;
             }
             .tile-grid {
-                grid-template-columns: 1fr; /* Force single column */
+                /* Change to a 4-column grid for mobile to keep tiles properly shaped */
+                grid-template-columns: repeat(4, 1fr);
                 grid-template-rows: auto;
-                grid-auto-flow: row;
+                grid-auto-flow: row dense;
+                
+                justify-content: center; 
                 width: 100%;
+                max-width: 400px; /* Limits width to keep it looking like a phone menu */
+                margin: 0 auto;
+                height: auto;
+                padding-right: 0;
             }
-            /* Make tiles behave better in vertical stack */
-            .small, .medium, .wide, .large {
-                grid-column: span 1 !important;
-                grid-row: span 1 !important;
-                height: 120px; /* Uniform height for mobile list style */
-            }
-            .page-title { font-size: 2rem; }
+
+            /* Adjust tile spanning for 4-column layout */
+            .wide { grid-column: span 4; }
+            .large { grid-column: span 4; }
         }
 
-        /* --- CONTENT STYLING --- */
-        .tile-slider { width: 100%; height: 100%; position: relative; }
-        .live .tile-slider { animation: tile-slide 10s infinite; }
-        
+        /* PREVENT SQUISHING ON TINY SCREENS */
+        @media (max-width: 400px) {
+            :root {
+                --cell-size: 70px; /* Slightly larger cells for readability on small phones */
+            }
+            .tile-grid {
+                /* Switch to 2 columns for very narrow devices to prevent squishing */
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .wide, .large { grid-column: span 2; }
+        }
+
+        /* --- 4. ANIMATION & APPS --- */
+        .tile-slider { width: 100%; height: 100%; position: relative; will-change: transform; transform: translate3d(0,0,0); }
+        .live .tile-slider { animation: tile-slide 10s infinite cubic-bezier(0.05, 0.9, 0.1, 1); }
+        .delay-1 .tile-slider { animation-delay: 0.5s; }
+        .delay-2 .tile-slider { animation-delay: 2.5s; }
+        .delay-3 .tile-slider { animation-delay: 5s; }
+        .delay-4 .tile-slider { animation-delay: 7.5s; }
+
         @keyframes tile-slide {
-            0%, 45% { transform: translateY(0); }
-            52%, 93% { transform: translateY(-100%); }
-            100% { transform: translateY(0); }
+            0%, 45% { transform: translate3d(0, 0, 0); }
+            52%, 93% { transform: translate3d(0, -100%, 0); }
+            100% { transform: translate3d(0, 0, 0); }
         }
 
         .tile-face { 
-            position: absolute; width: 100%; height: 100%; 
-            padding: 10px; display: flex; flex-direction: column; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            padding: 12px; display: flex; flex-direction: column; 
+            justify-content: space-between; backface-visibility: hidden; 
         }
-        .face-back { top: 100%; }
+        .face-front { top: 0; background: inherit; z-index: 2; }
+        .face-back  { top: 100%; background: inherit; z-index: 1; }
 
-        .tile-center-icon { 
-            flex-grow: 1; display: flex; align-items: center; 
-            justify-content: center; font-size: 40px; 
-        }
-
-        .tile-text-main { 
-            font-size: 13px; line-height: 1.2; 
-            padding-bottom: 25px; /* Leave room for the label */
-        }
-
-        .tile-label { 
-            position: absolute; bottom: 5px; left: 8px;
-            font-size: 11px; font-weight: 600; text-transform: lowercase;
-            background: rgba(0,0,0,0.2); padding: 2px 4px;
-            z-index: 5;
-        }
-
-        /* APP CONTAINERS */
-        .app-container { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: var(--bg-color); z-index: 100; 
-            transform: translateX(100%); transition: transform 0.4s var(--ease-metro);
-            display: flex; flex-direction: column;
-        }
-        .app-container.active { transform: translateX(0); }
-        .app-header { padding: 20px; display: flex; align-items: center; gap: 15px; }
-        .app-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .back-button { border: 2px solid currentColor; background: none; border-radius: 50%; cursor: pointer; color: inherit; width: 40px; height: 40px; }
+        .tile-center-icon { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 48px; }
         
-        .zoom-out { opacity: 0; transform: scale(0.9); pointer-events: none; }
+        /* TEXT PROTECTION: Added padding-bottom to ensure main text never hits the label */
+        .tile-text-main { 
+            font-size: 14px; 
+            font-weight: 500; 
+            line-height: 1.2; 
+            overflow: hidden; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical; 
+            word-break: break-word; 
+            margin-bottom: 20px; 
+        }
+
+        /* LABEL PROTECTION: Added semi-opaque background to separate label from flipping content */
+        .tile-label { 
+            font-size: 12px; 
+            font-weight: 600; 
+            background: rgba(0,0,0,0.3); 
+            padding: 2px 4px;
+            display: inline-block;
+        }
+
+        .app-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); color: var(--text-color); z-index: 100; display: flex; flex-direction: column; transform: translate3d(100%, 0, 0); transition: transform 0.5s var(--ease-metro); box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+        .app-container.active { transform: translate3d(0, 0, 0); }
+        .app-header { flex-shrink: 0; padding: 20px 40px; display: flex; align-items: center; gap: 20px; }
+        .app-header h2 { font-weight: 300; font-size: 2.5rem; }
+        .back-button { width: 48px; height: 48px; border: 2px solid currentColor; border-radius: 50%; background: transparent; color: inherit; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding-bottom: 4px; }
+        .back-button:hover { background: rgba(128,128,128,0.2); }
+        .app-content { flex-grow: 1; overflow-y: auto; padding: 20px 40px 80px 40px; max-width: 1200px; width: 100%; margin: 0 auto; }
+
+        .highlight-green { color: #107c10; font-weight: bold; }
+        .highlight-red { color: #d24726; font-weight: bold; }
+        .qa-block { margin-bottom: 20px; }
+        .qa-q { color: #d24726; font-weight: bold; }
+        .qa-a { color: #107c10; font-weight: bold; }
+
+        @keyframes fade-in-left { from { opacity: 0; transform: translate3d(50px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes fade-in-up { from { opacity: 0; transform: translate3d(0, 50px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
     </style>
 </head>
 <body>
 
     <div id="start-screen">
+        
         <div class="header-section">
             <h1 class="page-title">myridiculouswebsite.pizza</h1>
         </div>
 
         <div class="tile-grid">
-            <div class="tile medium bg-red live" onclick="openApp('app-about')">
+
+            <div class="tile medium bg-red live delay-1" onclick="openApp('app-about')">
                 <div class="tile-slider">
                     <div class="tile-face face-front"><div class="tile-center-icon">👤</div></div>
-                    <div class="tile-face face-back"><span class="tile-text-main">about me, my interests, and more!</span></div>
+                    <div class="tile-face face-back">
+                        <div class="tile-center-icon">📄</div>
+                        <span class="tile-text-main">about me, my interests, and more!</span>
+                    </div>
                 </div>
-                <span class="tile-label">about</span>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">about</span></div>
             </div>
 
-            <div class="tile wide bg-blue live" onclick="openApp('app-projects')">
+            <div class="tile wide bg-blue live delay-2" onclick="openApp('app-projects')">
                 <div class="tile-slider">
-                    <div class="tile-face face-front"><div class="tile-center-icon">💻</div></div>
-                    <div class="tile-face face-back"><span class="tile-text-main">projects I was involved in</span></div>
+                    <div class="tile-face face-front"><div class="tile-center-icon" style="font-size: 60px;">💻</div></div>
+                    <div class="tile-face face-back">
+                        <div class="tile-center-icon">🚀</div>
+                        <span class="tile-text-main">projects I was involved in</span>
+                    </div>
                 </div>
-                <span class="tile-label">projects</span>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">projects</span></div>
             </div>
 
-            <div class="tile medium bg-crimson live" onclick="openApp('app-links')">
+            <div class="tile medium bg-crimson live delay-3" onclick="openApp('app-links')">
                 <div class="tile-slider">
                     <div class="tile-face face-front"><div class="tile-center-icon">🔗</div></div>
-                    <div class="tile-face face-back"><span class="tile-text-main">links to some of my socials</span></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">links to some of my socials</span></div>
                 </div>
-                <span class="tile-label">links</span>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">links</span></div>
             </div>
 
-            <div class="tile medium bg-darkblue live" onclick="openApp('app-faq')">
+            <div class="tile medium bg-darkblue live delay-4" onclick="openApp('app-faq')">
                  <div class="tile-slider">
                     <div class="tile-face face-front"><div class="tile-center-icon">❓</div></div>
-                    <div class="tile-face face-back"><span class="tile-text-main">frequently asked questions</span></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">frequently asked questions</span></div>
                 </div>
-                <span class="tile-label">FAQ</span>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">FAQ</span></div>
             </div>
 
-            <div class="tile medium bg-grey live" onclick="openApp('app-others')">
+            <div class="tile medium bg-default live delay-2" onclick="openApp('app-contact')">
+                 <div class="tile-slider">
+                    <div class="tile-face face-front"><div class="tile-center-icon">📞</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">how to contact</span></div>
+                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">contact</span></div>
+            </div>
+
+            <div class="tile medium bg-grey live delay-3" onclick="openApp('app-credits')">
+                <div class="tile-slider">
+                    <div class="tile-face face-front"><div class="tile-center-icon">📝</div></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">credits for parts of this site</span></div>
+                </div>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">credits</span></div>
+            </div>
+
+            <div class="tile medium bg-default live delay-1" onclick="openApp('app-others')">
                 <div class="tile-slider">
                     <div class="tile-face face-front"><div class="tile-center-icon">💡</div></div>
-                    <div class="tile-face face-back"><span class="tile-text-main">miscellaneous stuff</span></div>
+                    <div class="tile-face face-back"><span class="tile-text-main" style="margin-top:auto; margin-bottom:auto;">miscellaneous stuff</span></div>
                 </div>
-                <span class="tile-label">others</span>
+                <div style="position: absolute; bottom: 10px; left: 10px; z-index: 5;"><span class="tile-label">others</span></div>
             </div>
+            
         </div>
     </div>
 
     <div id="app-about" class="app-container">
         <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>about</h2></div>
-        <div class="app-content"><p>Hello, I'm Acer!</p></div>
+        <div class="app-content">
+            <p style="font-size: 1.2rem;">hello! my name is Acer_51 (you can call me Acer), i like old things, programming and gaming</p><br>
+            <p>i develop in Kotlin, Java, HTML/CSS/JS but I'm also learning C/++ and I'm planning to learn GO</p><br><br>
+            <p><span class="highlight-green">i love reviving old tech, consoles and tinkering with stuff</span></p>
+            <p><span class="highlight-red">hates: self</span></p><br><br>
+            <p>i own a Wii, Wii U, Switch, New 3DS XL, New 2DS XL, Switch OLED and an old 3DS XL.</p><br>
+            <p>📅 it is currently <span id="clock" class="highlight-green"></span> for me.</p>
+        </div>
     </div>
+
     <div id="app-projects" class="app-container">
         <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>projects</h2></div>
-        <div class="app-content"><p>My cool projects list.</p></div>
+        <div class="app-content">
+            <h1 style="margin-bottom: 5px;">🟩 Breach In The Containment</h1>
+            <p style="color: #888; margin-bottom: 30px;">A Minecraft Server mixing FNaF and SCP.</p>
+            <h1 style="margin-bottom: 5px;">🟥 LegacyPreferences</h1>
+            <p style="color: #888;">My attempt at reviving the old System Preferences from macOS Monterey and prior.</p>
+        </div>
     </div>
+
+    <div id="app-links" class="app-container">
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>links</h2></div>
+        <div class="app-content"><h3 style="margin-bottom: 20px;">all my links are on <a href="https://guns.lol/acer51" style="color: var(--tile-blue); text-decoration: underline;">this page! (CLICK ME)</a></h3></div>
+    </div>
+
+    <div id="app-faq" class="app-container">
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>faq</h2></div>
+        <div class="app-content">
+            <h3 style="margin-bottom: 30px;">asked questions frequently</h3>
+            <div class="qa-block"><span class="qa-q">Q: </span>where do you live?<br><span class="qa-a">A: </span>in my house</div>
+            <div class="qa-block"><span class="qa-q">Q: </span>what is your real name?<br><span class="qa-a">A: </span> [insert a name] </div>
+            <div class="qa-block"><span class="qa-q">Q: </span>with what program did you write this website?<br><span class="qa-a">A: </span>VS Code</div>
+        </div>
+    </div>
+
+    <div id="app-contact" class="app-container">
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>contact</h2></div>
+        <div class="app-content">
+            <h3>you can contact me via:</h3>
+            <ul style="list-style: none; padding: 0; font-size: 1.2rem; line-height: 2; margin-top: 20px;">
+                <li><a href="mailto:&#x61;&#x63;&#x65;&#x72;&#x35;&#x31;&#x2E;&#x64;&#x65;&#x70;&#x6C;&#x6F;&#x70;&#x70;&#x65;&#x72;&#x40;&#x67;&#x6D;&#x61;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;" style="color: var(--tile-blue)">mail</a></li>
+                <li><a href="https://guns.lol/acer51" style="color: var(--tile-blue)">my links</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="app-credits" class="app-container">
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>credits</h2></div>
+        <div class="app-content" style="text-align: center;">
+            <div style="border: 1px dotted var(--tile-blue); padding: 40px; display: inline-block;">
+                <h3>You</h3><p>for visiting this website :3</p><br><br>
+                <h3>idkwhereisthisname</h3><p>for the whole website concept (don't sue me :[)</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-others" class="app-container">
+        <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>others</h2></div>
+        <div class="app-content"><p>Miscellaneous content goes here!</p></div>
+    </div>
+
     <script>
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+
+        function playTone(freq, type, duration) {
+            if (ctx.state === 'suspended') ctx.resume();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        }
+
+        // --- UI LOGIC ---
+        const startScreen = document.getElementById('start-screen');
+        const apps = document.querySelectorAll('.app-container');
+
+        document.querySelectorAll('.tile').forEach(tile => {
+            tile.addEventListener('mouseenter', () => playTone(400, 'sine', 0.1));
+            tile.addEventListener('click', () => playTone(300, 'triangle', 0.15));
+        });
+
         function openApp(appId) {
-            document.getElementById('start-screen').classList.add('zoom-out');
-            document.getElementById(appId).classList.add('active');
+            const targetApp = document.getElementById(appId);
+            if (!targetApp) return;
+            startScreen.classList.add('zoom-out');
+            targetApp.classList.add('active');
         }
 
         function goHome() {
-            document.getElementById('start-screen').classList.remove('zoom-out');
-            document.querySelectorAll('.app-container').forEach(app => app.classList.remove('active'));
+            playTone(200, 'sine', 0.2);
+            startScreen.classList.remove('zoom-out');
+            apps.forEach(app => app.classList.remove('active'));
         }
+
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
     </script>
 </body>
 </html>

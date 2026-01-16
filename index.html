@@ -263,9 +263,148 @@
 
         @keyframes fade-in-left { from { opacity: 0; transform: translate3d(50px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
         @keyframes fade-in-up { from { opacity: 0; transform: translate3d(0, 50px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+
+        /* --- NEW CSS FOR LINK TILES --- */
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .link-card {
+            background-color: #121212; /* Darker than bg */
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            position: relative;
+        }
+
+        .link-card:hover {
+            background-color: #1f1f1f;
+            text-decoration: none;
+            border-color: #555;
+        }
+        
+        .link-card:active {
+            transform: scale(0.98);
+        }
+
+        .link-icon {
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .link-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .link-name {
+            font-size: 14px;
+            color: #aaa;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .link-url {
+            font-size: 16px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        /* --- NEW CSS FOR MOBILE POPUP --- */
+        .mobile-popup-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-popup-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .mobile-popup-content {
+            background: var(--bg-color);
+            border: 2px solid var(--tile-red); /* Using red to grab attention */
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: fade-in-up 0.4s var(--ease-metro);
+        }
+
+        .popup-title {
+            color: var(--tile-red);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .popup-text {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #ddd;
+        }
+
+        .popup-btn {
+            background: var(--tile-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            font-family: inherit;
+        }
+
+        .popup-btn:active {
+            transform: scale(0.95);
+        }
+
+        .popup-btn:hover {
+            opacity: 0.9;
+        }
+
     </style>
 </head>
 <body>
+
+    <div id="mobile-popup" class="mobile-popup-overlay">
+        <div class="mobile-popup-content">
+            <div class="popup-title">Hey!</div>
+            <div class="popup-text">
+                I can see that you are using a mobile device. Welcome! Unfortunately, the mobile version isn't really... finished. I'm working on it, but it'll take some time. In the mean time, I recommend you to go on a desktop to see the desktop version. Desktop mode on your browser will not work. <br><br>Thank you for understanding and have a good day! <br><br> -Acer the dev
+            </div>
+            <button class="popup-btn" onclick="closePopup()">Understood</button>
+        </div>
+    </div>
 
     <div id="start-screen">
         
@@ -364,7 +503,83 @@
 
     <div id="app-links" class="app-container">
         <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>links</h2></div>
-        <div class="app-content"><h3 style="margin-bottom: 20px;">all my links are on <a href="https://guns.lol/acer51" style="color: var(--tile-blue); text-decoration: underline;">this page! (CLICK ME)</a></h3></div>
+        <div class="app-content">
+            
+            <div class="link-grid">
+                <div class="link-card" onclick="navigator.clipboard.writeText('acer_51'); alert('Discord username copied to clipboard!');" style="cursor: pointer;">
+                    <div class="link-icon">💬</div>
+                    <div class="link-info">
+                        <span class="link-name">Discord</span>
+                        <span class="link-url">acer_51</span>
+                    </div>
+                </div>
+
+                <a href="https://instagram.com/acer_51officiel/" target="_blank" class="link-card">
+                    <div class="link-icon">📷</div>
+                    <div class="link-info">
+                        <span class="link-name">Instagram</span>
+                        <span class="link-url">instagram.com/acer_51officiel/</span>
+                    </div>
+                </a>
+
+                <a href="https://www.tiktok.com/@jxst..acer_51" target="_blank" class="link-card">
+                    <div class="link-icon">🎵</div>
+                    <div class="link-info">
+                        <span class="link-name">TikTok</span>
+                        <span class="link-url">@jxst..acer_51</span>
+                    </div>
+                </a>
+
+                <a href="https://github.com/acer51-doctom" target="_blank" class="link-card">
+                    <div class="link-icon">💻</div>
+                    <div class="link-info">
+                        <span class="link-name">GitHub</span>
+                        <span class="link-url">github.com/acer51-doctom</span>
+                    </div>
+                </a>
+
+                <a href="https://www.reddit.com/user/Strange-Ad-835/" target="_blank" class="link-card">
+                    <div class="link-icon">🤖</div>
+                    <div class="link-info">
+                        <span class="link-name">Reddit</span>
+                        <span class="link-url">reddit.com/user/Strange-Ad-835/</span>
+                    </div>
+                </a>
+
+                <a href="https://namemc.com/profile/Acer_51.2" target="_blank" class="link-card">
+                    <div class="link-icon">🧊</div>
+                    <div class="link-info">
+                        <span class="link-name">NameMC</span>
+                        <span class="link-url">namemc.com/profile/Acer_51.2</span>
+                    </div>
+                </a>
+
+                <a href="https://steamcommunity.com/profiles/76561199163807203/" target="_blank" class="link-card">
+                    <div class="link-icon">🎮</div>
+                    <div class="link-info">
+                        <span class="link-name">steam</span>
+                        <span class="link-url">https://steamcommunity.com/profiles/76561199163807203/</span>
+                    </div>
+                </a>
+
+                <a href="https://ko-fi.com/acer51" target="_blank" class="link-card">
+                    <div class="link-icon">☕</div>
+                    <div class="link-info">
+                        <span class="link-name">my ko-fi for donations</span>
+                        <span class="link-url">ko-fi.com/acer51</span>
+                    </div>
+                </a>
+
+                <a href="mailto:acer51.developper@gmail.com" class="link-card">
+                    <div class="link-icon">📧</div>
+                    <div class="link-info">
+                        <span class="link-name">my email!</span>
+                        <span class="link-url">acer51.developper@gmail.com</span>
+                    </div>
+                </a>
+            </div>
+
+        </div>
     </div>
 
     <div id="app-faq" class="app-container">
@@ -383,7 +598,7 @@
             <h3>you can contact me via:</h3>
             <ul style="list-style: none; padding: 0; font-size: 1.2rem; line-height: 2; margin-top: 20px;">
                 <li><a href="mailto:&#x61;&#x63;&#x65;&#x72;&#x35;&#x31;&#x2E;&#x64;&#x65;&#x70;&#x6C;&#x6F;&#x70;&#x70;&#x65;&#x72;&#x40;&#x67;&#x6D;&#x61;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;" style="color: var(--tile-blue)">mail</a></li>
-                <li><a href="https://guns.lol/acer51" style="color: var(--tile-blue)">my links</a></li>
+                <li><a href="#" onclick="openApp('app-links'); return false;" style="color: var(--tile-blue)">my links</a></li>
             </ul>
         </div>
     </div>
@@ -400,7 +615,7 @@
 
     <div id="app-others" class="app-container">
         <div class="app-header"><button class="back-button" onclick="goHome()">⬅</button><h2>others</h2></div>
-        <div class="app-content"><p>Miscellaneous content goes here!</p></div>
+        <div class="app-content"><p> no miscellaneous content yet.</p></div>
     </div>
 
     <script>
@@ -434,6 +649,11 @@
         function openApp(appId) {
             const targetApp = document.getElementById(appId);
             if (!targetApp) return;
+            // Handle nested navigation if needed (e.g. from contact to links)
+            apps.forEach(app => {
+                if(app.id !== appId) app.classList.remove('active');
+            });
+
             startScreen.classList.add('zoom-out');
             targetApp.classList.add('active');
         }
@@ -452,6 +672,22 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        // --- MOBILE POPUP LOGIC ---
+        function checkMobile() {
+            // Checks if the window width is 800px or less (matching your CSS mobile breakpoint)
+            if (window.innerWidth <= 800) {
+                document.getElementById('mobile-popup').classList.add('show');
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('mobile-popup').classList.remove('show');
+        }
+
+        // Run check when page loads
+        window.addEventListener('load', checkMobile);
+
     </script>
 </body>
 </html>
